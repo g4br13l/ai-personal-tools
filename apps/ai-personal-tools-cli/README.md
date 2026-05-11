@@ -14,9 +14,8 @@ This feature takes a video as input and generates **transcription, diarization, 
 
 **Demo**
 
-Video: [https://www.youtube.com/watch?v=55JfRCa07Zw](https://www.youtube.com/watch?v=55JfRCa07Zw)
+https://github.com/user-attachments/assets/0162dd44-23db-4196-bd7e-44e78f2805f0
 
-[![CLI walkthrough on YouTube](https://img.youtube.com/vi/55JfRCa07Zw/hqdefault.jpg)](https://www.youtube.com/watch?v=55JfRCa07Zw)
 
 **Video-to-Text Pipeline:**
 
