@@ -4,15 +4,21 @@
 
 ## Project description and objective
 
-`ai-personal-tools-cli` is an interactive terminal UI app in the **AI Personal Tools** (`ai-personal-tools`) monorepo. It serves as a powerful toolkit providing personalized, well-defined pipelines for data extraction and media processing. Initially designed to run entirely locally without relying on cloud infrastructure, the project focuses on high precision, low cost, and automation.
+`ai-personal-tools-cli` is the interactive terminal UI for the **AI Personal Tools** monorepo. It turns personal, repeatable workflows into guided terminal flows with clear prompts, progress output, and typed handoff between UI, controllers, services, and shared workspace packages.
+
+The app currently focuses on two workflows: a local video-to-text pipeline for speaker-aware transcripts and subtitles, and a Firecrawl-backed web extraction flow for collecting structured data from any web page. The objective is to keep these pipelines cheap to run, precise enough for personal decision-making, and easy to extend without mixing UI, extraction, persistence, and domain responsibilities.
 
 The CLI currently highlights two main features:
 
 ### 1. Video-to-Text Pipeline
 
-This feature takes a video as input and generates **transcription, diarization, and captions** with high precision and low cost. It utilizes a Whisper model fine-tuned specifically for audio-to-text jobs and diarization.
+The video-to-text flow takes a local `.mp4` file and produces three artifacts: a normalized mono WAV file, a diarized JSON transcript, and an `.srt` subtitle file. The CLI validates the input path, runs `ffmpeg` to extract 16 kHz mono audio, calls `insanely-fast-whisper` with the configured Hugging Face token, then formats speaker segments into subtitles.
+
+The supported conversion mode today is `Transcription, diarize and subtitles`. Summarization is intentionally not part of the active flow yet.
 
 **Demo**
+
+The demo below shows the terminal-driven flow: provide a video path, select the conversion type, watch the pipeline status, and review the generated output paths at the end.
 
 https://github.com/user-attachments/assets/0162dd44-23db-4196-bd7e-44e78f2805f0
 
@@ -43,7 +49,9 @@ graph TD
 
 ### 2. Personalized Web Scraper & Crawler (In Development)
 
-Currently in active development, this feature acts as an automated ingestion engine. It allows users to manage a list of source URLs and set up cron jobs to run scraping and crawling across all saved sources. Powered by the **FireCrawl** service, the pipeline extracts content, maps it into structured data (validated via Zod), and saves the results into a **MongoDB** database.
+The web extraction flow is the first slice of a personalized ingestion engine for arbitrary structured data on the web. From the CLI, the user chooses between extracting only the submitted page or crawling the page and its subpages. The service delegates single-page extraction to `scraper().execWithJsonAsync(...)` and multi-page extraction to `crawler().execJson(...)` from `@repo/agent`.
+
+Firecrawl returns AI-extracted JSON, the app validates the result with a Zod schema, applies any schema-specific normalization, and persists valid records through the appropriate repository in `@repo/db-ai`. The current implemented schema targets job postings, but the feature objective is broader: collect any structured data from any web page through schema-driven extraction. Source-list management, scheduled runs, and broader personalized crawling are still planned work.
 
 ## Tech stack
 
@@ -56,7 +64,7 @@ Currently in active development, this feature acts as an automated ingestion eng
 - **Persistence:** Prisma (`@repo/db-ai`, `DATABASE_URL`)
 - **Monorepo:** Bun workspaces (`apps/`*, `packages/`*)
 - **Lint / types:** ESLint + TypeScript (`tsc --noEmit`)
-- **Video module (local tooling):** `ffmpeg` and `insanely-fast-whisper` must be available on `PATH` for `transcribeDiarize`; orchestration lives in `videoToText.service.ts` with `src/services/audioProcess/`, `src/services/videoProcess/`, and `src/services/textProcess/` (see `*.service.ts` / `*.script.ts` there for subprocess and formatting steps)
+- **Video module (local tooling):** `ffmpeg` and `insanely-fast-whisper` must be available on `PATH` for `transcribeDiarizeSubtitle`; orchestration lives in `videoToText.service.ts` with `src/services/audioProcess/`, `src/services/videoProcess/`, and `src/services/textProcess/` (see `*.service.ts` / `*.script.ts` there for subprocess and formatting steps)
 
 ## Repository structure
 
@@ -79,11 +87,11 @@ ai-personal-tools/
 │           │   ├── hooks/              # cliStatus, useInputReady, useTerminalSize
 │           │   └── providers/          # (reserved; may be empty)
 │           ├── modules/
-│           │   ├── jobPostingExtract/
-│           │   │   ├── jobPostingExtract.cli.tsx
-│           │   │   ├── jobPostingExtract.ctrl.ts
-│           │   │   ├── jobPostingExtract.service.ts
-│           │   │   └── jobPostingExtractDef/   # prompt, schema, desc, tests
+│           │   ├── webExtraction/
+│           │   │   ├── webExtraction.cli.tsx
+│           │   │   ├── webExtraction.ctrl.ts
+│           │   │   ├── webExtraction.service.ts
+│           │   │   └── jobPostingExtractionDef/ # prompt, schema, desc, tests
 │           │   └── videoToText/
 │           │       ├── videoToText.cli.tsx
 │           │       ├── videoToText.ctrl.ts
@@ -92,7 +100,7 @@ ai-personal-tools/
 │           │   ├── audioProcess/       # audioProcess.service.ts, audioProcess.script.ts
 │           │   ├── videoProcess/       # videoProcess.service.ts, videoProcess.script.ts
 │           │   └── textProcess/        # textProcess.service.ts
-│           └── shared/                 # lib/, utils/ (placeholders; may be empty)
+│           └── shared/                 # lib/, utils/ (reserved for shared app code)
 ├── packages/agent/
 ├── packages/core/                      # @repo/core — JobPostingSchema, enums (see packages/core/README.md)
 ├── packages/db-ai/
@@ -120,8 +128,8 @@ Key boundaries observed in code:
 
 Known implementation risks:
 
-- `videoToText`: `videoToTextCtrl().transcribeDiarize` runs ffmpeg → `insanely-fast-whisper` → formatting in `videoToText.service.ts` (requires external CLIs on `PATH`; optional envs such as `WHISPER_MODEL_PATH` for UI defaults — see `envConfig` / `videoToText.cli.tsx`).
-- The extraction prompt requests a `job_openings` wrapper and `application_url`, while runtime parsing expects a single job object and `applicationUrl`. This can cause extraction/runtime contract mismatch.
+- `videoToText`: `videoToTextCtrl().transcribeDiarizeSubtitle` runs ffmpeg → `insanely-fast-whisper` → formatting in `videoToText.service.ts` (requires external CLIs on `PATH`; optional envs such as `WHISPER_MODEL_PATH` for UI defaults — see `envConfig` / `videoToText.cli.tsx`).
+- `webExtraction`: the flow persists only pages that satisfy the active extraction Zod schema. The current implementation uses the job-posting schema, so prompt, schema, and persistence fields must stay aligned with `@repo/core`.
 
 ## Standards and conventions
 
@@ -202,7 +210,7 @@ From `apps/ai-personal-tools-cli/package.json`:
 
 ## Testing
 
-- **Current tests found:** `src/modules/jobPostingExtract/jobPostingExtractDef/jobPostingExtract.schema.test.ts`
+- **Current tests found:** `src/modules/webExtraction/jobPostingExtractionDef/webExtraction.schema.test.ts`
 - **Scope:** Zod field descriptions and payload shape validation for the job extraction module (keep fields aligned with `@repo/core/all` — `JobPostingSchema`, `WorkModel`, `EmploymentType`, `Seniority`; see `packages/core/README.md`)
 - **Command from app directory:** `bun test`
 - **Dedicated `test` script in `package.json`:** Not found
