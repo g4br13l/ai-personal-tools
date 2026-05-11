@@ -29,13 +29,13 @@ Rounded rectangles denote **pipeline steps**; hexagons denote **artifacts** (inp
 
 ```mermaid
 graph TD
-    A{{Input: .mp4 video<br/>Local source file selected in the CLI}}
-    B(1. Extract mono audio<br/>ffmpeg converts video to 16 kHz WAV)
-    C{{Output: *_audio_mono_16kHz.wav<br/>Clean audio input for Whisper}}
-    D(2. Transcribe and diarize<br/>Whisper creates text with speaker segments)
-    E{{Output: *_transcribed_diarized.json<br/>Structured transcript with timestamps}}
-    F(3. Generate subtitles<br/>Speaker segments are formatted as SRT)
-    G{{Output: *_subtitle.srt<br/>Caption file ready for playback}}
+    A{{Input: .mp4 video<br/>Selected file in the CLI}}
+    B(1. Extract mono audio<br/>ffmpeg converts to 16 kHz WAV)
+    C{{Output: *_audio_mono_16kHz.wav<br/>Cleaned audio for Whisper}}
+    D(2. Transcribe and diarize<br/>With Whisper)
+    E{{Output: *_transcribed_diarized.json<br/>Structured transcription}}
+    F(3. Generate subtitles<br/>Speaker segments as SRT)
+    G{{Output: *_subtitle.srt<br/>Caption file for playback}}
 
     A --> B --> C --> D --> E --> F --> G
 
