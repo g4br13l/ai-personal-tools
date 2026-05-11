@@ -1,0 +1,25 @@
+{
+  "extends": "@repo/tsconfig/tsConfigBunHono",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ],
+    }
+  },
+  "include": [
+    "vite.config.ts",
+    "eslint.config.mts",
+    "src/**/*",
+    "**/*.ts",
+    "**/*.tsx",
+    "**/*.js",
+    "**/*.jsx",
+    "**/*.mts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "name": "@repo/agent",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "lint": "bunx eslint . --max-warnings 0",
+    "check-types": "bunx tsc --noEmit",
+    "exports": "barrelsby --delete --singleQuotes --noSemicolon --c barrels.config.json",
+    "exports-clean": "powershell -Command \"Get-ChildItem -Path src -Recurse -Filter index.ts -ErrorAction SilentlyContinue | Remove-Item -Force\" && barrelsby --delete --singleQuotes --noSemicolon --c barrels.config.json"
+  },
+  "dependencies": {
+    "@clack/prompts": "^1.1.0",
+    "@repo/infra": "workspace:*",
+    "firecrawl": "^4.16.0",
+    "firecrawl-cli": "^1.10.0",
+    "picocolors": "^1.1.1",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@repo/tsconfig": "workspace:*",
+    "@repo/core": "workspace:*"
+  },
+  "exports": {
+    "./all": "./src/index.ts"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "skills": {
+    "ink-component-patterns": {
+      "source": "thebushidocollective/han",
+      "sourceType": "github",
+      "computedHash": "643fce8ce780aea1673952661643a29a0cefeb94c9206b7d246dde555c7f13b1"
+    },
+    "ink-layout-styling": {
+      "source": "thebushidocollective/han",
+      "sourceType": "github",
+      "computedHash": "9f32848018a59e768e183446ebbbd9e082d3f723a9c45c11d95b9b15aade1827"
+    }
+  }
+}

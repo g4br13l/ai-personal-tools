@@ -1,0 +1,68 @@
+generator client {
+  provider = "prisma-client"
+  output   = "./../../generated/client"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+generator zod {
+  provider = "prisma-zod-generator"
+  output   = "./../../generated/prisma-zod" // optional (JSON config can supply if omitted)
+  config   = "./zod-generator.config.json" // optional (relative to schema file)
+}
+
+enum WorkModel {
+  REMOTE    @map("remote")
+  HYBRID    @map("hybrid")
+  ONSITE    @map("onsite")
+  FLEXIBLE  @map("flexible")
+  NOT_FOUND @map("Not found")
+}
+
+enum EmploymentType {
+  FULL_TIME @map("full-time")
+  CONTRACT  @map("contract")
+  PART_TIME @map("part-time")
+  B2B       @map("B2B")
+  PJ        @map("PJ")
+  CLT       @map("CLT")
+  NOT_FOUND @map("Not found")
+}
+
+enum Seniority {
+  JUNIOR           @map("Junior")
+  MID_LEVEL        @map("Mid Level")
+  SENIOR           @map("Senior")
+  STAFF_SPECIALIST @map("Staff / specialist")
+  PRINCIPAL        @map("Principal")
+  NOT_FOUND        @map("Not found")
+}
+
+model JobPosting {
+  id              String         @id @default(auto()) @map("_id") @db.ObjectId
+  companyName     String         @map("company_name")
+  sourceUrl       String         @map("source_url")
+  jobTitle        String         @map("job_title")
+  jobDescription  String         @map("job_description")
+  countriesHiring String[]       @map("countries_hiring")
+  timezone        String?        @map("timezone")
+  workModel       WorkModel      @map("work_model")
+  employmentType  EmploymentType @map("employment_type")
+  seniority       Seniority      @map("seniority")
+  mainTechStack   String[]       @map("main_tech_stack")
+  fullTechStack   String[]       @map("full_tech_stack")
+  scope           String[]       @map("scope")
+  salaryCurrency  String         @map("salary_currency")
+  salaryFrom      Float          @map("salary_from")
+  salaryTo        Float          @map("salary_to")
+  notes           String         @map("notes")
+  applicationUrl  String         @map("application_url")
+  publishedAt     DateTime?      @map("published_At")
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@map("job_postings")
+}

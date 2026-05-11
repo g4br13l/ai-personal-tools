@@ -1,0 +1,89 @@
+---
+description: ai-personal-tools-cli — app structure, module conventions, and Ink/React patterns for AI edits
+globs: apps/ai-personal-tools-cli/**
+alwaysApply: false
+---
+
+# ai-personal-tools-cli (terminal app)
+
+Interactive **Ink + React** CLI in the **AI Personal Tools** (`ai-personal-tools`) monorepo. **Bun** is the runtime; **ESM** (`"type": "module"`). Validation: **Zod 4**. Prefer matching existing patterns in this app over generic React/web habits. See the `monorepo` rule for shared packages, dependency direction, imports, naming, env vars, and available tools. More detail: `apps/ai-personal-tools-cli/README.md` and root `README.md`.
+
+## Where things live
+
+| Path | Role |
+| --- | --- |
+| `src/main.tsx` | Entry: `MemoryRouter`, `Routes`, `menuItems` (labels, paths, screen elements). New top-level flows: add route here + module under `src/modules/`. |
+| `src/cli/` | Shared shell: layout, focus (`menu` \| `content`), reusable Ink inputs (`components/ui/`, `components/layout/`). |
+| `src/modules/<feature>/` | One feature per folder: `*.cli.tsx` (screen), `*.ctrl.ts` (flow / branching), `*.service.ts` (I/O orchestration). |
+| `src/modules/<feature>/<feature>Def/` | Colocated **prompt**, **Zod schema**, **descriptions**, and **tests** for that feature's extraction/validation contract. |
+
+**Data flow (keep this direction):** `*.cli.tsx` → `*.ctrl.ts` → `*.service.ts` → `@repo/agent` / `@repo/db-ai` / `@repo/core` / `@repo/infra`. Do not call Prisma or Firecrawl directly from `*.cli.tsx` or `*.ctrl.ts`.
+
+## Stack
+
+- **UI:** React 19 + Ink 6 (`ink-select-input`, `ink-text-input`, `ink-spinner`); terminal navigation via **react-router** `MemoryRouter` (not browser URLs).
+- **Validation:** Zod schemas in `*Def` folders; parse before persisting.
+- **Persistence:** `@repo/db-ai` repositories (e.g. `jobPostingRepo`), not ad-hoc SQL.
+- **Scraping/crawling:** `@repo/agent` (`scraper`, `crawler`), not raw Firecrawl imports.
+- **Local alias:** `@/*` → `./src/*`
+
+## Terminal UX (keyboard)
+
+- `↑` / `↓`: switch menu route
+- `→`: focus screen content
+- `←`: focus back to menu
+- `q` or `Ctrl+C`: quit
+
+## File naming
+
+- `*.cli.tsx` — route/module **screen** (Ink).
+- `*.ctrl.ts` — **controller**: user-flow branches, thin adapters, delegates to service.
+- `*.service.ts` — **service**: async work, repos, agent calls, Zod-shaped orchestration.
+- `*.schema.ts`, `*.prompt.ts`, `*.desc.ts` — under `*Def` for LLM/extraction contracts.
+- `*.schema.test.ts` — tests colocated with schema (e.g. `jobPostingExtract.schema.test.ts` — keep aligned with `@repo/core/all`).
+
+## Commands (run from `apps/ai-personal-tools-cli`)
+
+| Script | Command | Purpose |
+| --- | --- | --- |
+| `dev` | `cd ../.. && bun run --hot apps/ai-personal-tools-cli/src/main.tsx` | Hot-reload dev run |
+| `terminal` | `cd ../.. && bun run apps/ai-personal-tools-cli/src/main.tsx` | Single run, no reload |
+| `lint` | `bunx eslint . --max-warnings 0` | ESLint — zero warnings policy |
+| `check-types` | `bunx tsc --noEmit` | TypeScript check, no emit |
+| `exports` | barrelsby | Regenerate barrel `index.ts` files |
+| `exports-clean` | PowerShell remove + barrelsby | Full barrel regeneration from scratch |
+
+Run tests: `bun test` (no dedicated `test` script in `package.json` — use `bun test` directly). Run when extraction/Zod contracts change.
+
+## MANDATORY: lint and type-check after every edit
+
+After every code change in this app:
+
+```
+1. bun run lint         → must exit with 0 warnings, 0 errors
+2. bun run check-types  → must exit clean
+3. If errors → fix → repeat from step 1
+4. If schemas or parsing changed → also run: bun test
+```
+
+Do not consider a task complete until both commands pass cleanly.
+
+## AI / LLM editing checklist
+
+1. **Respect layer boundaries:** UI → ctrl → service → shared packages.
+2. **Keep Zod + prompt + runtime parsing aligned** — mismatched field names between prompt JSON and schema break extraction silently or at runtime.
+3. **New menu item:** update `menuItems` in `main.tsx` + add module folder with `*.cli.tsx` and wire ctrl/service.
+4. **Shared terminal widgets** belong in `src/cli/components/`; feature-specific markup stays in `src/modules/<feature>/`.
+5. **Use Context7 MCP** (`resolve-library-id` → `query-docs`) before writing code against Ink, React Router, Zod, or any library API.
+6. **Use Firecrawl skill** (`.agents/skills/firecrawl/`) for any web fetch, search, or scraping task.
+7. Run `bun run lint` + `bun run check-types` after edits. Fix all issues before finishing.
+
+## Module notes
+
+### `videoToText`
+
+`videoToTextCtrl().transcribeDiarize` is **implemented**: orchestrates ffmpeg → `insanely-fast-whisper` (and formatting) via `videoToText.service.ts`. **Requires** `ffmpeg` and `insanely-fast-whisper` on `PATH` for those flows. Root env: `HUGGING_FACE_TOKEN`, `WHISPER_MODEL_PATH` (see `envConfig.ts`, `videoToText.cli.tsx`). See `src/modules/videoToText/scripts/scripts.md` for CLI flags.
+
+### `jobPostingExtract` — contract alignment
+
+The LLM prompt (`jobPostingExtract.prompt.ts`) uses a `job_openings` wrapper and snake_case keys such as `application_url`, while runtime Zod parsing expects a single job object and **camelCase** (e.g. `applicationUrl`). When editing prompt or schema, **keep JSON keys and Zod field names in sync** or extraction will fail or mis-parse.

@@ -1,0 +1,55 @@
+[
+  {
+    "company_name": "Kraken",
+    "website": "https://www.kraken.com",
+    "careers_page": "https://jobs.ashbyhq.com/kraken.com",
+    "filters": [
+      {
+        "url": "https://jobs.ashbyhq.com/kraken.com?departmentId=58ad3a24-d8a5-41d1-a108-d10fec89da4e&locationId=0ae979f7-78d9-4e42-8cf1-831610586017",
+        "role": [
+          "front-end engineer"
+        ],
+        "location": [
+          "Brazil",
+          "remote"
+        ]
+      },
+      {
+        "url": "https://jobs.ashbyhq.com/kraken.com?departmentId=c6d3df21-38b4-41ac-8f61-e130d99172fb&locationId=0ae979f7-78d9-4e42-8cf1-831610586017",
+        "role": [
+          "full-stack engineer"
+        ],
+        "location": [
+          "Brazil",
+          "remote"
+        ]
+      }
+    ]
+  },
+  {
+    "company_name": "Made Card",
+    "website": "https://www.madecard.com",
+    "careers_page": "https://www.madecard.com/careers",
+    "filters": []
+  },
+  {
+    "company_name": "Sierra Studio",
+    "website": "https://sierra.studio",
+    "careers_page": "https://jobs.ashbyhq.com/sierra-studio",
+    "filters": [
+      {
+        "url": "https://jobs.ashbyhq.com/sierra-studio?locationId=b2e5daf4-e367-4a04-8b1f-a9d095706db2",
+        "location": [
+          "Brazil",
+          "remote"
+        ]
+      }
+    ]
+  },
+  {
+    "company_name": "AE Studio",
+    "website": "https://www.ae.studio/",
+    "careers_page": "https://www.ae.studio/join-us#open-roles",
+    "filters": []
+  }
+]

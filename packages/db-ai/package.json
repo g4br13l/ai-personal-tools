@@ -1,0 +1,29 @@
+{
+  "name": "@repo/db-ai",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "db-gen": "bunx prisma generate",
+    "db-push": "bunx --bun prisma db push",
+    "lint": "bunx eslint . --max-warnings 0",
+    "check-types": "bunx tsc --noEmit",
+    "exports": "barrelsby --delete --singleQuotes --noSemicolon --c barrels.config.json",
+    "exports-clean": "powershell -Command \"Get-ChildItem -Path src -Recurse -Filter index.ts -ErrorAction SilentlyContinue | Remove-Item -Force\" && barrelsby --delete --singleQuotes --noSemicolon --c barrels.config.json",
+    "db:migrate": "bun src/migrations/run.ts"
+  },
+  "dependencies": {
+    "@prisma/client": "6.19",
+    "dotenv": "^17.3.1",
+    "prisma-zod-generator": "1.32.1",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@repo/core": "workspace:*",
+    "@repo/tsconfig": "workspace:*",
+    "prisma": "6.19"
+  },
+  "exports": {
+    "./all": "./src/index.ts"
+  }
+}

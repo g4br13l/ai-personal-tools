@@ -1,0 +1,44 @@
+{
+  "name": "ai-personal-tools-cli",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "cd ../.. && bun run --hot apps/ai-personal-tools-cli/src/main.tsx",
+    "terminal": "cd ../.. && bun run apps/ai-personal-tools-cli/src/main.tsx",
+    "lint": "bunx eslint . --max-warnings 0",
+    "check-types": "bunx tsc --noEmit",
+    "exports": "barrelsby --delete --singleQuotes --noSemicolon --c barrels.config.json",
+    "exports-clean": "powershell -Command \"Get-ChildItem -Path src -Recurse -Filter index.ts -ErrorAction SilentlyContinue | Remove-Item -Force\" && barrelsby --delete --singleQuotes --noSemicolon --c barrels.config.json"
+  },
+  "dependencies": {
+    "@clack/prompts": "^1.1.0",
+    "@ai-sdk/anthropic": "^3.0.58",
+    "@ai-sdk/google": "^3.0.43",
+    "@ai-sdk/openai": "^3.0.41",
+    "@openrouter/ai-sdk-provider": "^2.3.0",
+    "@picovoice/leopard-node": "^3.0.1",
+    "ai": "^6.0.116",
+    "firecrawl": "^4.15.4",
+    "firecrawl-cli": "^1.10.0",
+    "ink": "^6.8.0",
+    "ink-big-text": "^2.0.0",
+    "ink-gradient": "^4.0.0",
+    "ink-link": "^5.0.0",
+    "ink-multi-select": "^2.0.0",
+    "ink-select-input": "^6.2.0",
+    "ink-spinner": "^5.0.0",
+    "ink-text-input": "^6.0.0",
+    "react": "^19.2.4",
+    "react-router": "^7.13.1",
+    "string-width": "^8.2.0"
+  },
+  "devDependencies": {
+    "@repo/agent": "workspace:*",
+    "@repo/core": "workspace:*",
+    "@repo/db-ai": "workspace:*",
+    "@repo/infra": "workspace:*",
+    "@repo/tsconfig": "workspace:*",
+    "@types/react": "^19.2.14"
+  }
+}

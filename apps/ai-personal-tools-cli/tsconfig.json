@@ -1,0 +1,24 @@
+{
+  "extends": "@repo/tsconfig/tsConfigReactApp",
+  "compilerOptions": {
+    // "baseUrl": ".",
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ],
+    }
+  },
+  "include": [
+    "eslint.config.mts",
+    "src/**/*",
+    "**/*.ts",
+    "**/*.tsx",
+    "**/*.js",
+    "**/*.jsx",
+    "**/*.mts",
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+  ]
+}

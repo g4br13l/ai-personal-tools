@@ -1,0 +1,273 @@
+---
+description: ai-personal-tools monorepo (AI Personal Tools) — workspace layout, shared packages, dependency rules, conventions, scripts, and available tools for AI edits
+alwaysApply: true
+---
+
+# ai-personal-tools monorepo (AI Personal Tools)
+
+Bun workspaces (`apps/*`, `packages/*`). Runtime: **Bun 1.3.2**. All packages are **ESM** (`"type": "module"`). TypeScript strict mode everywhere. Validation: **Zod 4** (see root `README.md`).
+
+## Workspace map
+
+| Package | Import as | Role |
+| --- | --- | --- |
+| `packages/core` | `@repo/core/all` | Domain contracts: `JobPostingSchema`, `JobPostingEntityT`, enums (`WorkModel`, `EmploymentType`, `Seniority`). Framework-agnostic. No env vars. **Purity:** runtime code under `packages/core/src` imports **`zod` only**; `@repo/tsconfig` is dev-only for `tsconfig.json` extends — not for runtime imports. |
+| `packages/agent` | `@repo/agent/all` | Firecrawl scrape/crawl wrappers. `scraper().execWithJsonAsync(...)` for single page; `crawler().execJson(...)` for multi-page. Always pass `outputSchema` (Zod) + `prompt`. |
+| `packages/db-ai` | `@repo/db-ai/all` | Prisma 6 + MongoDB. `jobPostingRepo().add(...)` persists `JobPostingEntityT`. Generated artifacts in `generated/` (git-ignored) — run `db-gen` after schema changes. |
+| `packages/infra` | `@repo/infra/all` | Shared utilities: `zodHelper`, `pollCrawl`, `strToDate`, terminal helpers, file utils, branded results. No app-specific logic here. |
+| `packages/ts` | `@repo/tsconfig/<preset>` | Shared TS presets (JSON): `tsConfigBunHono`, `tsConfigReactApp`, **`tsConfigReactLib`** (file on disk: `tsConfigReactLibrary.json`). Config-only, no runtime code. |
+| `apps/ai-personal-tools-cli` | — | Interactive Ink + React terminal app. See `ai-personal-tools-cli` rule. |
+
+## Dependency direction (enforce strictly)
+
+```
+apps/ai-personal-tools-cli
+  -> @repo/agent  @repo/db-ai  @repo/core  @repo/infra
+packages/agent, packages/db-ai
+  -> @repo/core  @repo/infra (where applicable)  @repo/tsconfig (dev)
+@repo/infra, @repo/core
+  -> leaf packages: no imports from apps, agent, or db-ai
+```
+
+- **Nothing under `packages/*` may import from `apps/*`.** Apps consume packages; not the reverse.
+- `@repo/core` and `@repo/infra` are leaf packages — they must not import from `agent`, `db-ai`, or any app.
+- Apps must not import Prisma or Firecrawl directly; use `@repo/db-ai` and `@repo/agent` respectively.
+
+## How packages communicate (summary)
+
+| From | To | Role |
+| --- | --- | --- |
+| App `*.service.ts` | `@repo/agent` | `scraper().execWithJsonAsync` / `crawler().execJson` + Zod |
+| App | `@repo/core` | `JobPostingSchema`, enums, `JobPostingEntityT` |
+| App | `@repo/db-ai` | `jobPostingRepo()`, `tbZodSchema` when needed |
+| App / `@repo/agent` | `@repo/infra` | helpers (`zodHelper`, `pollCrawl`, files, terminal) |
+| `@repo/db-ai` | `@repo/core` | Persist shapes aligned with `JobPostingEntityT` |
+
+## Import rules (ESLint-enforced)
+
+- **Always use public entrypoints:** `import { … } from '@repo/<pkg>/all'`
+- **Never** import from `@repo/*/src/**` or `packages/*/src/**`
+- **Type-only imports:** `import type { … }` — keep separate from value imports
+
+## Functional programming (enforced)
+
+This codebase uses a **functional style throughout**. OOP patterns are not used.
+
+**Never use:**
+- `class` declarations (no classes anywhere in apps or packages)
+- `this` keyword
+- `new` for domain/service/repo objects (exception: third-party SDK constructors like `new Firecrawl(...)`)
+- Inheritance or mixins
+
+**Always use:**
+- Plain functions and factory functions that return plain objects
+- Zod schemas as the single source of truth for data shapes — no class-based models
+- Immutable data flow: transform and return new values, do not mutate arguments
+- `type` aliases over `interface` (ESLint-enforced)
+
+**Factory function pattern** (the standard in this repo):
+
+```ts
+// ✅ correct — factory returns a plain object of functions
+export function jobPostingRepo() {
+  async function add(data: JobPostingEntityT) { … }
+  return { add }
+}
+
+// ✅ correct — plain exported function
+export async function jobPostingExtractCtrl({ url, … }: PropsT) { … }
+
+// ❌ wrong — class with methods
+export class JobPostingRepo {
+  async add(data: JobPostingEntityT) { … }
+}
+```
+
+**Module-level singletons** are fine for stateless shared values (e.g. `export const terminal = clackTerminalAdapter()`).
+
+## Naming conventions (ESLint-aligned)
+
+- **Variables and constants** (`let`, `const`, function parameters, and other bindings): **camelCase** (e.g. `userId`, `maxRetries`, `isReady`). Do not use `SCREAMING_SNAKE` for these names. **Exception:** React components stay **`PascalCase`** (see below).
+- Types: `PascalCase` + `T` suffix (e.g. `JobPostingEntityT`)
+- Type parameters: `T` prefix (e.g. `TItem`)
+- Prefer `type` over `interface` unless declaration merging is needed
+- React components: `PascalCase`
+
+## Code style
+
+- 2-space indent; single quotes; JSX attributes double quotes
+- LF line endings; ~100 char line length
+- No `any`; no empty catches; prefix unused vars with `_`
+- **Imports spacing:** After the last `import` at the top of each file, insert **three empty lines** before the first following statement (local convention — same as “three blank lines between the import block and the first statement”).
+
+## Package scripts reference
+
+All commands run from the **package directory** unless noted.
+
+### All packages (`@repo/core`, `@repo/agent`, `@repo/infra`, `@repo/db-ai`, `@repo/tsconfig`)
+
+| Script | Command | When to run |
+| --- | --- | --- |
+| `lint` | `bunx eslint . --max-warnings 0` | After any code change |
+| `check-types` | `bunx tsc --noEmit` | After any code change |
+| `exports` | `barrelsby --delete --singleQuotes --noSemicolon --c barrels.config.json` | After adding/removing exported symbols |
+| `exports-clean` | PowerShell: remove all `src/**/index.ts` then run barrelsby | Full barrel regeneration from scratch |
+
+Run from repo root with filter:
+
+```bash
+bun run --filter @repo/<pkg> lint
+bun run --filter @repo/<pkg> check-types
+```
+
+### `@repo/db-ai` only
+
+| Script | Command | When to run |
+| --- | --- | --- |
+| `db-gen` | `bunx prisma generate` | After editing `schema.prisma` — regenerates Prisma client + Zod schemas in `generated/` |
+| `db-push` | `bunx --bun prisma db push` | After `db-gen` — syncs schema to the database (dev only) |
+| `db:migrate` | `bun src/migrations/run.ts` | Run ordered **custom TypeScript** migration scripts (not Prisma Migrate folders) |
+
+### `apps/ai-personal-tools-cli`
+
+| Script | Command | When to run |
+| --- | --- | --- |
+| `lint` | `bunx eslint . --max-warnings 0` | After any code change |
+| `check-types` | `bunx tsc --noEmit` | After any code change |
+| `dev` | `cd ../.. && bun run --hot apps/ai-personal-tools-cli/src/main.tsx` | Development with hot reload |
+| `terminal` | `cd ../.. && bun run apps/ai-personal-tools-cli/src/main.tsx` | Single run |
+| `exports` / `exports-clean` | barrelsby (same as packages) | After adding/removing exported symbols |
+
+## MANDATORY: lint and type-check workflow
+
+**After every code modification**, run lint and check-types for every package/app touched. This is not optional.
+
+```
+1. Make code changes
+2. Run: bun run lint        (in the package/app directory)
+3. Run: bun run check-types (in the package/app directory)
+4. If errors → fix them → go to step 2
+5. Repeat until both commands exit with 0 errors and 0 warnings
+```
+
+- **Zero warnings policy**: `--max-warnings 0` means any ESLint warning is a failure.
+- **Fix, don't suppress**: do not add `// eslint-disable` or `@ts-ignore` to silence errors — fix the root cause.
+- If multiple packages were touched, run lint + check-types in each one.
+- For `@repo/db-ai` schema changes: run `db-gen` first, then lint + check-types.
+
+## @repo/core — domain contracts
+
+Key exports: `JobPostingSchema`, `JobPostingEntityT`, `WorkModel`, `EmploymentType`, `Seniority`.
+Schema changes impact all consumers — update downstream types/tests when fields change.
+
+## @repo/agent — scraping
+
+```ts
+// Single page + JSON extraction
+scraper().execWithJsonAsync({ url, outputSchema, prompt, onStatusUpdate })
+
+// Multi-page crawl
+crawler().execJson({ url, outputSchema, prompt, onStatusUpdateFn })
+```
+
+`agent.ts` is currently stubbed/commented out — do not rely on it.
+
+## @repo/db-ai — persistence
+
+- Database: MongoDB. Prisma maps camelCase fields to snake_case via `@map(...)`.
+- `generated/` is git-ignored; always run `db-gen` after editing `schema.prisma`.
+- **Custom migrations:** TypeScript scripts in `src/migrations/scripts/`. Append a new script and register it **in order** in `src/migrations/run.ts` (the `migrations` array). Never reorder or remove scripts that may already be applied in shared environments. No `_migrations` ledger in this repo — keep scripts idempotent where possible.
+- Generated Zod aggregates (e.g. `tbZodSchema`) are available from `@repo/db-ai/all`.
+
+## @repo/infra — utilities
+
+Key exports: `zodHelper.addDescriptionsToShape(...)`, `pollCrawl(...)` (caller supplies Firecrawl client), `strToDate(...)`, `clackTerminal` adapter, branded ok/err results, file/async utils.
+Keep this package free of app-specific logic.
+
+## Environment (monorepo root `.env`)
+
+`loadEnvFromRoot()` in `shell/loadEnv.ts` walks up from `cwd` to find `.env`. It **does not overwrite** keys already present in `process.env`. Root `envConfig.ts` validates the full schema on startup.
+
+| Variable | Required | Notes |
+| --- | --- | --- |
+| `ENV` | Yes | `dev` \| `hml` \| `prod` |
+| `FIRE_CRAWL_API_KEY` | Yes | Firecrawl auth |
+| `AI_GATEWAY_API_KEY` | Yes | AI gateway |
+| `OPEN_ROUTER_KEY` | Yes | OpenRouter LLM |
+| `DATABASE_URL` | Yes | MongoDB connection |
+| `HUGGING_FACE_TOKEN` | Yes | e.g. Whisper/diarization (`videoToText` / CLI tooling) |
+| `WHISPER_MODEL_PATH` | Yes | Default model path for video-to-text UI (bounds in `envConfig.ts`) |
+
+## Available tools — use these proactively
+
+These tools are installed and available in this workspace. Use them whenever they provide value for the task at hand.
+
+### Plugins (`.cursor/settings.json`)
+
+| Plugin | Use for |
+| --- | --- |
+| **prisma** | Prisma schema changes, migrations, and DB inspection. Use the Prisma MCP tools instead of running CLI commands manually when available — **supplement** with this repo’s `db-gen` / `db-push` / custom `db:migrate` as documented above. |
+| **firecrawl** | Web scraping, search, crawling. Use the `firecrawl` skill (`.agents/skills/firecrawl/`) for any web fetch, search, or extraction task. |
+| **context7** | Up-to-date library documentation. Use `context7` MCP tools (`resolve-library-id` → `query-docs`) when writing code that uses a library and you need accurate API references (Zod, Prisma, Ink, React, Bun, etc.). Always prefer context7 docs over pre-trained knowledge for library APIs. |
+| **cloudflare** | Cloudflare Workers, KV, D1, R2, AI — use if deploying to Cloudflare. |
+| **vercel** | React/Next.js performance patterns — use when writing React components. |
+| **mcp-mermaid** | Visual diagrams — see **Mermaid diagram MCP** below. **Required** whenever the task is to draw, create, or edit a visual diagram. |
+
+### Prisma MCP (`plugin-prisma-Prisma-Local`)
+
+Optional helpers when working on `@repo/db-ai` — align with workspace scripts (`db-gen`, `db-push`, custom `db:migrate`).
+
+| Tool | When to use |
+| --- | --- |
+| `migrate-dev` | Prisma Migrate workflows in development (if used alongside custom scripts) |
+| `migrate-status` | Check migration state |
+| `migrate-reset` | Reset dev database (dev only — confirm with user first) |
+| `Prisma-Studio` | Visual DB browser |
+
+### Context7 MCP (`user-context7`)
+
+Use for any library API question before writing code:
+
+```
+1. resolve-library-id  →  find the library's Context7 ID (e.g. "zod", "prisma", "ink")
+2. query-docs          →  fetch relevant documentation for the specific API you need
+```
+
+Trigger: any time you are about to use a library function and are not 100% certain of the current API signature.
+
+### Mermaid diagram MCP (`mcp-mermaid`)
+
+**Mandatory:** whenever the task asks you to **draw**, **create**, or **edit** a **visual diagram** (flowcharts, architecture diagrams, sequence diagrams, state machines, ER-style diagrams, timelines rendered as diagrams, etc.), use the installed **`mcp-mermaid`** MCP.
+
+- **Do not skip MCP:** prefer **`mcp-mermaid`** tool calls over inventing ad hoc ASCII-only deliverables when a diagram is what the user needs — unless they explicitly ask for ASCII/markdown-only output without MCP rendering or edits.
+- **Before invoking tools:** read the MCP tool descriptors/schemas for **`mcp-mermaid`** (required arguments and formats vary by tool).
+- If Cursor exposes this server under a prefixed identifier (e.g. **`user-mcp-mermaid`** in MCP tooling lists), it is the same integration — still **`mcp-mermaid`** as documented here.
+
+### Project skills (`.agents/skills/`)
+
+| Skill folder | Use when |
+| --- | --- |
+| `firecrawl` | Any web operation — search, scrape, crawl, browser automation |
+| `firecrawl-search` | Searching the web for information |
+| `firecrawl-scrape` | Extracting content from a specific URL |
+| `firecrawl-crawl` | Bulk-extracting an entire site section |
+| `firecrawl-map` | Discovering all URLs on a site |
+| `firecrawl-browser` | Pages requiring clicks, login, or form interaction |
+| `firecrawl-agent` | Structured JSON extraction from complex multi-page sites |
+| `firecrawl-download` | Saving a site as local files |
+| `search-job-in-companies-pages` | Searching company career pages against Gabriel's CV |
+| `summarizeInterview` | Summarizing a job interview transcript |
+| `makeTranscription` | Transcribing an MP4 to WAV + SRT + transcript |
+| `readme` / `create-readme` / `crafting-effective-readmes` | Writing or updating README files |
+
+## AI / LLM editing checklist
+
+1. Respect dependency direction — never invert the layer graph; **packages never import apps**.
+2. Use `@repo/<pkg>/all` entrypoints only; never import internals.
+3. After editing `@repo/core` schemas, update all consumers.
+4. After editing `schema.prisma`: run `db-gen` (and `db-push` if syncing dev DB) before relying on types/client.
+5. New **custom** DB scripts: add file under `src/migrations/scripts/` and register in **`src/migrations/run.ts`** in order.
+6. **Run `lint` + `check-types` in every touched package. Fix all errors. Repeat until clean. This is mandatory.**
+7. Use **Context7 MCP** when writing code against any library API to get current docs.
+8. Use **Firecrawl skill** for any web fetch, search, or scraping task.
+9. Use **`mcp-mermaid`** for any task that requires **drawing, creating, or editing** a **visual diagram** (follow **Mermaid diagram MCP** above).

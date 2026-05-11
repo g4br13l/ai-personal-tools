@@ -1,0 +1,39 @@
+{
+  "name": "ai-personal-tools",
+  "type": "module",
+  "private": true,
+  "module": "src/main.ts",
+  "scripts": {
+    "syncpack-fix": "bunx syncpack fix-mismatches",
+    "syncpack-list": "bunx syncpack list-mismatches",
+    "exports-clean": "bun run shell/packageJsonCommands.ts",
+    "deps-circular": "bunx madge --extensions ts --circular",
+    "deps-circular-img": "bun deps-circular --image circular.svg"
+  },
+  "packageManager": "bun@1.3.2",
+  "engines": {
+    "bun": "=1.3.2"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "devDependencies": {
+    "@stylistic/eslint-plugin": "^5.10.0",
+    "@types/bun": "^1.3",
+    "barrelsby": "^2.8.1",
+    "eslint": "^10.0.3",
+    "eslint-plugin-import-lite": "^0.5.2",
+    "jiti": "^2.6.1",
+    "madge": "^8.0.0",
+    "syncpack": "^14.2.0",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.57.0"
+  },
+  "peerDependencies": {
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "zod": "^4.3.6"
+  }
+}

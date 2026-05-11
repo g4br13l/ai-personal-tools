@@ -1,0 +1,16 @@
+{
+  "output": "./../../generated/prisma-zod",
+  "mode": "full",
+  "pureModels": true,
+  "variants": {
+    "pure": {
+      "enabled": true
+    },
+    "input": {
+      "enabled": true
+    },
+    "result": {
+      "enabled": true
+    }
+  }
+}

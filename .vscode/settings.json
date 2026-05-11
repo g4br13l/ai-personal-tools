@@ -1,0 +1,61 @@
+{
+  "workbench.iconTheme": "material-icon-theme",
+  "material-icon-theme.folders.associations": {
+    "db": "database",
+    "DB": "database",
+    "db-ai": "database",
+    "db-core": "database"
+  },
+  "cSpell.words": [
+    "Captionize",
+    "datasource",
+    "firecrawl",
+    "gabriel",
+    "mongodb",
+    "openai",
+    "pyannote",
+    "subpages",
+    "unrepresentable"
+  ],
+  "explorer.fileNesting.patterns": {
+    "package.json": "tsconfig*, vite*, pnpm-lock*, package-lock*, bun.lock*, pnpm-workspace*, .npm*, .yarn*, yarn*, .nvm*, tailwind.config*, postcss.config*, .env*, .env., Docker*, .docker*, .babel*, webpack*, .release*, commit*, .eslint*, eslint*, eslint.config*, .lint*, .prettier*, .prettier*, turbo.json, .gitignore*, components.json, barrels.config.json, .editorconfig, .cta.json, envSchema.ts, config.ts, envConfig.ts",
+    "tailwind.config*": "tailwind.config*, postcss.config*",
+    ".env": ".env*, .env.",
+    "Dockerfile": "Docker*, .docker*",
+    "babel.config.js": ".babel*, webpack*",
+    /* "README.md": "*.md", */
+    ".gitignore": ".release*, commit*",
+    ".eslintrc.js": ".eslint*, eslint*, .lint*, .prettier*, .prettier*"
+  },
+  // Use ESLint as the default formatter for TypeScript/JavaScript files
+  "[typescript]": {
+    "editor.defaultFormatter": "dbaeumer.vscode-eslint",
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": "explicit"
+    }
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "dbaeumer.vscode-eslint",
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": "explicit"
+    }
+  },
+  "[prisma]": {
+    "editor.defaultFormatter": "Prisma.prisma"
+  },
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit",
+    "source.organizeImports": "never"
+  },
+  "files.associations": {
+    "**/*.json": "jsonc",
+    "**/tsconfig*.json": "jsonc",
+    "**/packages/typescript/**/*.json": "jsonc"
+  },
+  "prisma.pinToPrisma6": true,
+  "conventionalCommits.scopes": [
+    "all-monorepo"
+  ],
+}

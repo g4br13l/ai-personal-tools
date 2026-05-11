@@ -1,0 +1,10 @@
+{
+  "directory": [
+    "./src"
+  ],
+  "exclude": [
+    "main.tsx",
+    "node_modules"
+  ],
+  "structure": "flat"
+}

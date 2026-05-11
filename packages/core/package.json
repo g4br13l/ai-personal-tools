@@ -1,0 +1,21 @@
+{
+  "name": "@repo/core",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "lint": "bunx eslint . --max-warnings 0",
+    "check-types": "bunx tsc --noEmit",
+    "exports": "barrelsby --delete --singleQuotes --noSemicolon --c barrels.config.json",
+    "exports-clean": "powershell -Command \"Get-ChildItem -Path src -Recurse -Filter index.ts -ErrorAction SilentlyContinue | Remove-Item -Force\" && barrelsby --delete --singleQuotes --noSemicolon --c barrels.config.json"
+  },
+  "dependencies": {
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@repo/tsconfig": "workspace:*"
+  },
+  "exports": {
+    "./all": "./src/index.ts"
+  }
+}
