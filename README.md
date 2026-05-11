@@ -4,7 +4,7 @@
 
 **AI Personal Tools** is a personal automation workspace for turning repetitive, high-context tasks into reliable AI-assisted workflows. Its immediate focus is on two practical pipelines: converting local videos into speaker-aware transcripts and subtitles, and extracting structured data from web pages.
 
-This repository implements that vision as a **Bun workspaces** monorepo. Shared packages provide domain contracts (`@repo/core`), Firecrawl scraping and crawling wrappers (`@repo/agent`), MongoDB persistence through Prisma (`@repo/db-ai`), cross-cutting utilities (`@repo/infra`), and TypeScript presets (`@repo/tsconfig`). The main interactive surface today is `**ai-personal-tools-cli`**, an Ink + React terminal app composed on top of those packages.
+This repository implements that vision as a **Bun workspaces** monorepo. Shared packages provide domain contracts (`@repo/core`), Firecrawl scraping and crawling wrappers (`@repo/agent`), MongoDB persistence through Prisma (`@repo/db-ai`), cross-cutting utilities (`@repo/infra`), and TypeScript presets (`@repo/tsconfig`). The main interactive surface today is **[`ai-personal-tools-cli`](apps/ai-personal-tools-cli/README.md)**, an Ink + React terminal app composed on top of those packages.
 
 Current product goals:
 
